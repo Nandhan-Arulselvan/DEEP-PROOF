@@ -1,0 +1,9 @@
+node_modules/
+artifacts/
+cache/
+coverage/
+deployments/*.json
+uploads/
+.env
+.env.local
+supabase/.temp/
