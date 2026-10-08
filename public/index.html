@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07101f" />
+  <title>DeepProof | Document integrity</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="#overview" aria-label="DeepProof home"><span class="brand-mark">D</span>Deep<span>Proof</span></a>
+    <nav aria-label="Main navigation"><a href="#upload">Upload</a><a href="#verify">Verify</a><a href="#library">Library</a><a href="#activity">Activity</a></nav>
+    <div class="account"><span id="networkState" class="status-dot muted">Connecting</span><button id="signOutButton" class="text-button hidden">Sign out</button></div>
+  </header>
+
+  <main>
+    <section id="authView" class="auth-wrap" aria-labelledby="authTitle">
+      <div class="auth-card">
+        <p class="eyebrow">DOCUMENT INTEGRITY PLATFORM</p>
+        <h1 id="authTitle">Evidence should be <em>verifiable.</em></h1>
+        <p class="intro">DeepProof records a PDF fingerprint, its IPFS reference, and optional blockchain evidence—without placing the PDF itself on-chain.</p>
+        <form id="authForm" novalidate>
+          <label>Email<input id="email" type="email" autocomplete="email" required placeholder="name@example.com" /></label>
+          <label>Password<input id="password" type="password" autocomplete="current-password" required minlength="8" placeholder="At least 8 characters" /></label>
+          <button id="authSubmit" class="primary" type="submit">Sign in</button>
+          <button id="authMode" class="text-button" type="button">Need an account? Create one</button>
+          <p id="authMessage" class="form-message" aria-live="polite"></p>
+        </form>
+      </div>
+      <aside class="auth-aside"><div class="proof-orbit"></div><p class="eyebrow">BYTE-LEVEL CONFIDENCE</p><h2>One changed byte creates a new SHA-256 fingerprint.</h2><p>Matches establish that two PDF byte streams are identical. They do not judge a document’s truthfulness or authorship.</p></aside>
+    </section>
+
+    <section id="appView" class="hidden">
+      <section id="overview" class="welcome panel">
+        <div><p class="eyebrow">YOUR INTEGRITY WORKSPACE</p><h1>Know what your evidence <em>proves.</em></h1><p class="intro">Upload a trusted PDF, retain its real IPFS CID, and compare later submissions against its server-calculated SHA-256 hash.</p></div>
+        <div class="privacy-note"><strong>Privacy notice</strong><br>IPFS content can be publicly retrievable depending on your Pinata configuration. Do not upload confidential PDFs unless you understand the storage and access implications.</div>
+      </section>
+
+      <section class="stats" aria-label="Document statistics">
+        <article><span>Authorized documents</span><strong id="documentCount">—</strong><small>your Supabase records</small></article>
+        <article><span>Verified matches</span><strong id="matchCount">—</strong><small>from recorded checks</small></article>
+        <article><span>Registered on chain</span><strong id="chainCount">—</strong><small>confirmed document records</small></article>
+        <article><span>Recent activity</span><strong id="activityCount">—</strong><small>auditable events</small></article>
+      </section>
+
+      <section class="workflow-label"><span>TRUSTED WORKFLOW</span><i></i><span>VALIDATE → HASH → IPFS → PERSIST → OPTIONAL CHAIN</span></section>
+      <section class="two-column">
+        <article id="upload" class="panel action-panel">
+          <div class="panel-heading"><div><p class="eyebrow">01 / REGISTER</p><h2>Upload trusted evidence</h2></div><span class="tag">PDF only · 25 MB max</span></div>
+          <p>DeepProof validates the original bytes and calculates its SHA-256 hash inside the Edge Function before Pinata receives the file.</p>
+          <label id="uploadDropzone" class="dropzone" for="uploadFile"><input id="uploadFile" type="file" accept="application/pdf,.pdf" /><span class="upload-icon">↑</span><strong>Drop a PDF here or choose a file</strong><small id="uploadFileName">No file selected</small></label>
+          <button id="uploadButton" class="primary">Validate, hash & upload</button>
+          <div id="uploadResult" class="result muted" aria-live="polite">Your upload result will show real identifiers and timestamps here.</div>
+        </article>
+
+        <article id="verify" class="panel action-panel">
+          <div class="panel-heading"><div><p class="eyebrow">02 / VERIFY</p><h2>Compare a submitted PDF</h2></div><span class="tag cyan">SERVER HASH</span></div>
+          <p>Select an authorized reference first. The submitted PDF is hashed server-side and the result is written to your verification history.</p>
+          <label>Trusted reference<select id="referenceSelect"><option value="">Loading your documents…</option></select></label>
+          <label id="verifyDropzone" class="dropzone compact" for="verifyFile"><input id="verifyFile" type="file" accept="application/pdf,.pdf" /><span class="upload-icon">↗</span><strong>Choose PDF to compare</strong><small id="verifyFileName">No file selected</small></label>
+          <button id="verifyButton" class="secondary">Verify document</button>
+          <div id="verifyResult" class="result muted" aria-live="polite">Select a trusted reference and a PDF.</div>
+        </article>
+      </section>
+
+      <section id="library" class="panel library-panel">
+        <div class="panel-heading"><div><p class="eyebrow">AUTHORIZED RECORDS</p><h2>Document library</h2></div><div class="library-tools"><label class="search"><span>⌕</span><input id="librarySearch" type="search" placeholder="Search filenames or hashes" /></label><select id="libraryFilter" aria-label="Filter by blockchain status"><option value="all">All statuses</option><option value="registered">On chain</option><option value="not_registered">Not on chain</option><option value="failed">Chain failed</option></select></div></div>
+        <div id="libraryList" class="library-list"><p class="empty">Loading your authorized records…</p></div>
+      </section>
+
+      <section id="activity" class="two-column lower-grid">
+        <article class="panel"><div class="panel-heading"><div><p class="eyebrow">AUDIT TRAIL</p><h2>Recent activity</h2></div><button id="refreshButton" class="quiet-button">Refresh</button></div><div id="eventList" class="timeline"><p class="empty">No events yet.</p></div></article>
+        <article class="panel"><div class="panel-heading"><div><p class="eyebrow">VERIFICATION HISTORY</p><h2>Check results</h2></div><span id="historyCount" class="tag">0 records</span></div><div id="verificationList" class="timeline"><p class="empty">No verification checks yet.</p></div></article>
+      </section>
+
+      <section id="report" class="panel report hidden"><div class="panel-heading"><div><p class="eyebrow">VERIFICATION REPORT</p><h2 id="reportTitle">Latest result</h2></div><button id="printReport" class="quiet-button">Print report</button></div><div id="reportBody"></div></section>
+    </section>
+  </main>
+  <footer>DeepProof records integrity evidence. A SHA-256 mismatch means the submitted bytes differ; it does not by itself establish intent.</footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

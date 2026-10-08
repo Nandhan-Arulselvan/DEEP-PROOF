@@ -1,0 +1,24 @@
+{
+  "name": "deepproof-review-1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PDF evidence integrity verification using SHA-256 and a local Polygon-compatible blockchain.",
+  "scripts": {
+    "chain": "hardhat node",
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "test": "hardhat test",
+    "check": "npm run compile && npm test",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.18"
+  }
+}
