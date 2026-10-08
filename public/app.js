@@ -46,12 +46,12 @@ function renderLibrary() {
     return (!query || haystack.includes(query)) && (filter === "all" || document.blockchain_status === filter);
   });
   if (!records.length) { const empty = document.createElement("p"); empty.className = "empty"; empty.textContent = state.documents.length ? "No records match this filter." : "No authorized documents yet. Upload your first trusted PDF above."; target.append(empty); return; }
-  records.forEach((document) => {
+  records.forEach((record) => {
     const row = document.createElement("article"); row.className = "document-row";
-    const name = document.createElement("div"); const title = document.createElement("div"); title.className = "filename"; title.textContent = document.original_filename; const meta = document.createElement("div"); meta.className = "filemeta"; meta.textContent = `${Number(document.file_size_bytes).toLocaleString()} bytes · ${when(document.created_at)}`; name.append(title, meta);
-    const ids = document.createElement("div"); const hash = document.createElement("div"); hash.className = "hash-text"; hash.textContent = document.sha256_hash; const cid = document.createElement("div"); cid.className = "hash-text"; cid.textContent = `CID ${document.ipfs_cid}`; ids.append(hash, cid);
-    const actions = document.createElement("div"); actions.className = "row-actions"; const badge = document.createElement("span"); badge.className = `chain-badge ${document.blockchain_status}`; badge.textContent = document.blockchain_status.replaceAll("_", " "); actions.append(badge, makeButton("Copy hash", () => copy(document.sha256_hash)), makeButton("Copy CID", () => copy(document.ipfs_cid)));
-    if (state.config?.blockchain && document.blockchain_status !== "registered") actions.append(makeButton("Register on chain", () => registerOnChain(document)));
+    const name = document.createElement("div"); const title = document.createElement("div"); title.className = "filename"; title.textContent = record.original_filename; const meta = document.createElement("div"); meta.className = "filemeta"; meta.textContent = `${Number(record.file_size_bytes).toLocaleString()} bytes · ${when(record.created_at)}`; name.append(title, meta);
+    const ids = document.createElement("div"); const hash = document.createElement("div"); hash.className = "hash-text"; hash.textContent = record.sha256_hash; const cid = document.createElement("div"); cid.className = "hash-text"; cid.textContent = `CID ${record.ipfs_cid}`; ids.append(hash, cid);
+    const actions = document.createElement("div"); actions.className = "row-actions"; const badge = document.createElement("span"); badge.className = `chain-badge ${record.blockchain_status}`; badge.textContent = record.blockchain_status.replaceAll("_", " "); actions.append(badge, makeButton("Copy hash", () => copy(record.sha256_hash)), makeButton("Copy CID", () => copy(record.ipfs_cid)));
+    if (state.config?.blockchain && record.blockchain_status !== "registered") actions.append(makeButton("Register on chain", () => registerOnChain(record)));
     row.append(name, ids, actions); target.append(row);
   });
 }
