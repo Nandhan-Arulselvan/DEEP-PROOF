@@ -69,9 +69,17 @@ function timeline(targetId, items, type) {
 function renderAll() { renderStats(); renderReferenceOptions(); renderLibrary(); timeline("eventList", state.events, "event"); timeline("verificationList", state.logs, "log"); $("historyCount").textContent = `${state.logs.length} record${state.logs.length === 1 ? "" : "s"}`; }
 
 async function loadLibrary() {
-  const { data, error } = await state.client.functions.invoke("document-library", { method: "GET" });
+  const [documentsResult, logsResult, eventsResult] = await Promise.all([
+    state.client.from("documents").select("*").order("created_at", { ascending: false }),
+    state.client.from("verification_logs").select("*").order("created_at", { ascending: false }).limit(100),
+    state.client.from("document_events").select("*").order("created_at", { ascending: false }).limit(100),
+  ]);
+  const error = documentsResult.error || logsResult.error || eventsResult.error;
   if (error) throw error;
-  state.documents = data.documents || []; state.logs = data.logs || []; state.events = data.events || []; renderAll();
+  state.documents = documentsResult.data || [];
+  state.logs = logsResult.data || [];
+  state.events = eventsResult.data || [];
+  renderAll();
 }
 
 function showApp(session) {
