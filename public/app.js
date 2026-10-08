@@ -13,6 +13,16 @@ function copy(value) { navigator.clipboard?.writeText(value).then(() => setNetwo
 function makeButton(label, callback) { const button = document.createElement("button"); button.className = "copy-button"; button.type = "button"; button.textContent = label; button.addEventListener("click", callback); return button; }
 function setBusy(button, busy, label) { button.disabled = busy; if (busy) { button.dataset.label = button.textContent; button.textContent = label; } else button.textContent = button.dataset.label || button.textContent; }
 function getError(error) { return error?.message || error?.context?.error || error?.context?.message || "The request could not be completed."; }
+async function getFunctionError(error) {
+  const response = error?.context;
+  if (response && typeof response.clone === "function") {
+    try {
+      const body = await response.clone().json();
+      if (body?.error || body?.message) return body.error || body.message;
+    } catch { /* the gateway did not return JSON */ }
+  }
+  return getError(error);
+}
 
 function renderStats() {
   $("documentCount").textContent = state.documents.length;
@@ -87,7 +97,7 @@ async function upload() {
   const file = $("uploadFile").files[0]; const issue = validClientFile(file); if (issue) return message("uploadResult", issue, "error");
   const button = $("uploadButton"); setBusy(button, true, "Uploading…"); message("uploadResult", "Uploading original bytes. The server validates the PDF, calculates SHA-256, then requests Pinata storage…", "pending");
   const { data, error } = await state.client.functions.invoke("upload-document", { body: file, headers: { "x-file-name": encodeURIComponent(file.name), "content-type": "application/pdf" } }); setBusy(button, false);
-  if (error || data?.error) { message("uploadResult", data?.error || getError(error), "error"); return; }
+  if (error || data?.error) { message("uploadResult", data?.error || await getFunctionError(error), "error"); return; }
   const document = data.document; const target = $("uploadResult"); target.className = "result success"; target.replaceChildren(); addLine(target, data.duplicate ? "Existing document" : "Document ID", document.id, true); addLine(target, "SHA-256", document.sha256_hash, true); addLine(target, "IPFS CID", document.ipfs_cid, true); addLine(target, "Recorded", when(document.created_at));
   await loadLibrary();
 }
@@ -122,7 +132,7 @@ async function verify() {
   const file = $("verifyFile").files[0]; const documentId = $("referenceSelect").value; const issue = validClientFile(file); if (issue) return message("verifyResult", issue, "error"); if (!documentId) return message("verifyResult", "Select a trusted document reference.", "error");
   const button = $("verifyButton"); setBusy(button, true, "Verifying…"); message("verifyResult", "Calculating the submitted PDF’s SHA-256 hash on the server and comparing it to the trusted reference…", "pending");
   const { data, error } = await state.client.functions.invoke(`verify-document?documentId=${encodeURIComponent(documentId)}`, { body: file, headers: { "x-file-name": encodeURIComponent(file.name), "content-type": "application/pdf" } }); setBusy(button, false);
-  if (error || data?.error) { message("verifyResult", data?.error || getError(error), "error"); return; }
+  if (error || data?.error) { message("verifyResult", data?.error || await getFunctionError(error), "error"); return; }
   const target = $("verifyResult"); target.className = `result ${data.result === "match" ? "success" : data.result === "mismatch" ? "danger" : "error"}`; target.replaceChildren(); const outcome = data.result === "match" ? ["MATCH", "The PDF bytes match the trusted reference."] : data.result === "mismatch" ? ["MISMATCH", "The PDF bytes differ from the trusted reference."] : ["INCONCLUSIVE", "The server could not confirm the trusted hash against the live blockchain record."]; addLine(target, outcome[0], outcome[1]); addLine(target, "Expected hash", data.expectedHash, true); addLine(target, "Computed hash", data.computedHash, true); addLine(target, "Source", data.verificationSource.replaceAll("_", " "));
   showReport(data); await loadLibrary(); $("report").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
