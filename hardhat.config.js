@@ -1,6 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 
-/** A local EVM network is Polygon-compatible for this Review 1 contract demo. */
+/** A local Ethereum-compatible network for development only. */
 module.exports = {
   solidity: {
     version: "0.8.24",

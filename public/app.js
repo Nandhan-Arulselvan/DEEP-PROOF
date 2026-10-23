@@ -162,3 +162,58 @@ $("uploadFile").addEventListener("change", (event) => { $("uploadFileName").text
 $("verifyFile").addEventListener("change", (event) => { $("verifyFileName").textContent = event.target.files[0]?.name || "No file selected"; });
 $("uploadButton").addEventListener("click", upload); $("verifyButton").addEventListener("click", verify); $("refreshButton").addEventListener("click", () => loadLibrary().catch((error) => message("uploadResult", getError(error), "error"))); $("librarySearch").addEventListener("input", renderLibrary); $("libraryFilter").addEventListener("change", renderLibrary); $("printReport").addEventListener("click", () => window.print());
 initialise();
+
+
+// AI screening is an independent analysis; it does not alter existing registration/verification flows.
+const aiInput = document.getElementById("aiVerifyFile");
+const aiButton = document.getElementById("aiVerifyButton");
+const aiResult = document.getElementById("aiVerifyResult");
+const aiDownloadButton = document.getElementById("aiDownloadButton");
+let lastAiReport = null;
+if (aiInput && aiButton && aiResult) {
+  aiInput.addEventListener("change", () => { document.getElementById("aiVerifyFileName").textContent = aiInput.files[0]?.name || "No file selected"; });
+  aiButton.addEventListener("click", async () => {
+    const file = aiInput.files[0];
+    if (!file) { aiResult.className = "result error"; aiResult.textContent = "Choose a PDF first."; return; }
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) { aiResult.className = "result error"; aiResult.textContent = "Only PDF files are supported."; return; }
+    const form = new FormData(); form.append("pdf", file);
+    aiButton.disabled = true; aiButton.textContent = "Analyzing…"; aiResult.className = "result pending"; aiResult.textContent = "Inspecting metadata and PDF structure. This may take a moment…";
+    try {
+      const response = await fetch("/api/ai-verify", { method: "POST", body: form });
+      const data = await response.json(); if (!response.ok) throw new Error(data.message || "AI screening failed.");
+      lastAiReport = data;
+      aiDownloadButton?.classList.remove("hidden");
+      aiResult.replaceChildren(); aiResult.className = "result " + (data.verdict === "ai_generated" ? "danger" : data.verdict === "likely_original" ? "success" : "muted");
+      const title = document.createElement("strong"); title.textContent = "AI verdict: " + data.verdict.replaceAll("_", " ").toUpperCase(); aiResult.append(title);
+      const summary = document.createElement("p"); summary.textContent = data.model.detail; aiResult.append(summary);
+      if (data.confidence !== null) { const c = document.createElement("p"); c.textContent = "Model confidence: " + (data.confidence * 100).toFixed(1) + "%"; aiResult.append(c); }
+      const hash = document.createElement("p"); hash.textContent = "SHA-256 (analysis copy): " + data.sha256; aiResult.append(hash);
+      if (data.heuristic) {
+        const heuristic = document.createElement("p"); heuristic.textContent = `Text-pattern screen: ${data.heuristic.outcome}${data.heuristic.score === null ? "" : ` (${data.heuristic.score}/100)`} · ${data.heuristic.words.toLocaleString()} extracted words.`; aiResult.append(heuristic);
+        if (data.heuristic.indicators?.length) { const patternList = document.createElement("ul"); data.heuristic.indicators.forEach((indicator) => { const item = document.createElement("li"); item.textContent = `${indicator.name} — ${indicator.detail}`; patternList.append(item); }); aiResult.append(patternList); }
+      }
+      const heading = document.createElement("h3"); heading.textContent = "Verification layers"; aiResult.append(heading);
+      const list = document.createElement("ul"); for (const signal of data.signals) { const li = document.createElement("li"); li.textContent = signal.layer.replaceAll("_", " ") + " — " + signal.detail; list.append(li); } aiResult.append(list);
+      const note = document.createElement("p"); note.textContent = "Limitations: " + data.limitations.join(" "); aiResult.append(note);
+    } catch (error) { aiResult.className = "result error"; aiResult.textContent = error.message || "AI screening failed."; }
+    finally { aiButton.disabled = false; aiButton.textContent = "Run AI verification layers"; }
+  });
+}
+
+aiDownloadButton?.addEventListener("click", () => {
+  if (!lastAiReport) return;
+  const report = lastAiReport;
+  const lines = [
+    "DeepProof AI screening report", "",
+    `File: ${report.filename}`, `Analyzed: ${new Date().toLocaleString()}`,
+    `SHA-256: ${report.sha256}`, `Model verdict: ${report.verdict}`,
+    `Text-pattern outcome: ${report.heuristic?.outcome || "Unavailable"}`,
+    `Text-pattern score: ${report.heuristic?.score ?? "N/A"}`,
+    `Extracted words: ${report.heuristic?.words ?? "N/A"}`, "",
+    "Indicators:", ...(report.heuristic?.indicators || []).map((indicator) => `- ${indicator.name}: ${indicator.detail}`), "",
+    "Limitations:", ...(report.limitations || []).map((limitation) => `- ${limitation}`),
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob); const link = document.createElement("a");
+  link.href = url; link.download = "DeepProof-AI-Screening-Report.txt"; link.click(); URL.revokeObjectURL(url);
+});

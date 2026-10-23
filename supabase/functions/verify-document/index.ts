@@ -23,9 +23,9 @@ Deno.serve(async (request) => {
     // A document marked registered is additionally checked against the live contract
     // when server-side RPC configuration is available. We never infer chain success
     // merely from the database field.
-    if (document.blockchain_status === "registered" && document.contract_address && Deno.env.get("POLYGON_RPC_URL")) {
+    if (document.blockchain_status === "registered" && document.contract_address && Deno.env.get("SEPOLIA_RPC_URL")) {
       try {
-        const registry = new Contract(document.contract_address, registryAbi, new JsonRpcProvider(Deno.env.get("POLYGON_RPC_URL")));
+        const registry = new Contract(document.contract_address, registryAbi, new JsonRpcProvider(Deno.env.get("SEPOLIA_RPC_URL")));
         const evidence = await registry.getEvidence(`0x${document.sha256_hash}`);
         verificationSource = "blockchain_reference";
         chainDiagnostic = { blockchain_checked: true, on_chain_exists: evidence.exists };

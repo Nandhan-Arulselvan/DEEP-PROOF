@@ -1,6 +1,6 @@
 # DeepProof
 
-DeepProof is a PDF integrity system. It calculates SHA-256 from the exact submitted bytes, stores the PDF in Pinata/IPFS, records protected metadata and audit history in Supabase, and can confirm a wallet-signed `EvidenceRegistry` registration on Polygon.
+DeepProof is a PDF integrity system. It calculates SHA-256 from the exact submitted bytes, stores the PDF in Pinata/IPFS, records protected metadata and audit history in Supabase, and can confirm a wallet-signed `EvidenceRegistry` registration on Ethereum Sepolia.
 
 It does **not** establish authorship or factual truth. A match establishes byte-level identity with the chosen trusted reference; a mismatch means the bytes differ.
 
@@ -47,17 +47,17 @@ The migration in `supabase/migrations/` creates `documents`, `verification_logs`
 
 IPFS retrieval/privacy is controlled by your Pinata configuration. Treat a CID as potentially publicly retrievable; do not upload confidential material without an appropriate storage and access plan.
 
-## Polygon / wallet registration
+## Ethereum Sepolia / wallet registration
 
 The existing `contracts/EvidenceRegistry.sol` is retained. It supports `registerEvidence(bytes32)` and `getEvidence(bytes32)` with duplicate prevention and an `EvidenceRegistered` event.
 
-Deploy it to an intended network (use Polygon Amoy for testing) with a separately secured deployment account. Do not deploy to mainnet automatically. Set these Edge Function secrets and matching local runtime variables:
+Deploy `EvidenceRegistry.sol` to Ethereum Sepolia (chain ID `11155111`) with a separately secured deployment account. Do not deploy to Ethereum mainnet automatically. Set these Edge Function secrets and matching local runtime variables:
 
 ```bash
-supabase secrets set POLYGON_RPC_URL="https://your-rpc-provider"
+supabase secrets set SEPOLIA_RPC_URL="https://your-sepolia-rpc-provider"
 supabase secrets set BLOCKCHAIN_CONTRACT_ADDRESS="0xYourDeployedRegistry"
-supabase secrets set BLOCKCHAIN_NETWORK="polygon-amoy"
-supabase secrets set BLOCKCHAIN_CHAIN_ID="80002"
+supabase secrets set BLOCKCHAIN_NETWORK="ethereum-sepolia"
+supabase secrets set BLOCKCHAIN_CHAIN_ID="11155111"
 ```
 
 Set the non-secret `BLOCKCHAIN_CONTRACT_ADDRESS`, `BLOCKCHAIN_NETWORK`, and `BLOCKCHAIN_CHAIN_ID` in `.env.local` for the UI too. A **Register on chain** action appears only when that public configuration exists. It asks the user’s browser wallet to sign, waits for its real receipt, and calls `confirm-blockchain-registration`, which independently checks the receipt and contract state through the server-side RPC before it marks the Supabase record as registered.
@@ -70,7 +70,7 @@ npm run deploy:local
 npm start
 ```
 
-The local Hardhat signer in `server.js` is only retained for the legacy local `/api/register` demonstration endpoint. It is not used for the production-style dashboard or Polygon flow.
+The local Hardhat signer in `server.js` is only retained for the legacy local `/api/register` demonstration endpoint. It is not used for the production-style dashboard or Ethereum Sepolia flow.
 
 ## Checks
 
@@ -82,4 +82,4 @@ The test suite covers contract registration/duplicate prevention plus determinis
 
 ## Production hosting
 
-Host the Express app (or serve `public/` through an equivalent Node host), configure its `.env.local`/host variables with only public browser configuration, set `APP_ORIGIN` to the hosted origin in Edge Function secrets, and enable that URL in Supabase Auth redirect URLs. Supabase provides the database/auth/functions; Pinata stores files; Polygon stores hash evidence only. Polygon does not host the website.
+Host the Express app (or serve `public/` through an equivalent Node host), configure its `.env.local`/host variables with only public browser configuration, set `APP_ORIGIN` to the hosted origin in Edge Function secrets, and enable that URL in Supabase Auth redirect URLs. Supabase provides the database/auth/functions; Pinata stores files; Ethereum Sepolia stores hash evidence only. Ethereum does not host the website.

@@ -11,7 +11,7 @@
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
     <a class="brand" href="#overview" aria-label="DeepProof home"><span class="brand-mark">D</span>Deep<span>Proof</span></a>
-    <nav aria-label="Main navigation"><a href="#upload">Upload</a><a href="#verify">Verify</a><a href="#library">Library</a><a href="#activity">Activity</a></nav>
+    <nav aria-label="Main navigation"><a href="#upload">Upload</a><a href="#verify">Verify</a><a href="#aiVerification">AI check</a><a href="#library">Library</a><a href="#activity">Activity</a></nav>
     <div class="account"><span id="networkState" class="status-dot muted">Connecting</span><button id="signOutButton" class="text-button hidden">Sign out</button></div>
   </header>
 
@@ -63,6 +63,15 @@
           <button id="verifyButton" class="secondary">Verify document</button>
           <div id="verifyResult" class="result muted" aria-live="polite">Select a trusted reference and a PDF.</div>
         </article>
+      </section>
+
+      <section id="aiVerification" class="panel action-panel ai-panel">
+        <div class="panel-heading"><div><p class="eyebrow">03 / AI AUTHENTICITY SCREENING</p><h2>Inspect evidence for AI indicators</h2></div><span class="tag cyan">SEPARATE FROM BLOCKCHAIN</span></div>
+        <p>Runs supporting metadata and PDF-structure checks. For an actual model prediction, configure a local AI detector using <code>AI_DETECTOR_URL</code>. Heuristic indicators alone cannot prove AI authorship.</p>
+        <label class="dropzone compact" for="aiVerifyFile"><input id="aiVerifyFile" type="file" accept="application/pdf,.pdf" /><span class="upload-icon">✧</span><strong>Choose evidence PDF for AI screening</strong><small id="aiVerifyFileName">No file selected</small></label>
+        <button id="aiVerifyButton" class="secondary">Run AI verification layers</button>
+        <button id="aiDownloadButton" class="quiet-button hidden" type="button">Download AI screening report</button>
+        <div id="aiVerifyResult" class="result muted" aria-live="polite">AI screening results will appear here. This does not modify or register the evidence.</div>
       </section>
 
       <section id="library" class="panel library-panel">

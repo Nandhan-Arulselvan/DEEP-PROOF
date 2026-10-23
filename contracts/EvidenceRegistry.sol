@@ -3,6 +3,10 @@ pragma solidity ^0.8.24;
 
 /// @title EvidenceRegistry
 /// @notice Stores only SHA-256 fingerprints, never the PDF itself.
+/// @dev This EVM contract is intended for deployment to Ethereum Sepolia
+///      (chain ID 11155111). It deliberately has no network-specific logic:
+///      the connected wallet and RPC provider select the network at deployment
+///      and transaction time.
 contract EvidenceRegistry {
     struct Evidence {
         address registeredBy;

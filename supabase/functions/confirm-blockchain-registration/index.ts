@@ -13,9 +13,9 @@ Deno.serve(async (request) => {
     const body = await request.json(); documentId = String(body.documentId ?? "");
     const txHash = String(body.transactionHash ?? "");
     if (!/^[0-9a-f-]{36}$/i.test(documentId) || !/^0x[0-9a-f]{64}$/i.test(txHash)) return json(request, { error: "A document ID and transaction hash are required." }, 400);
-    const rpcUrl = Deno.env.get("POLYGON_RPC_URL");
+    const rpcUrl = Deno.env.get("SEPOLIA_RPC_URL");
     const contractAddress = Deno.env.get("BLOCKCHAIN_CONTRACT_ADDRESS");
-    const networkName = Deno.env.get("BLOCKCHAIN_NETWORK") ?? "polygon-amoy";
+    const networkName = Deno.env.get("BLOCKCHAIN_NETWORK") ?? "ethereum-sepolia";
     if (!rpcUrl || !contractAddress) return json(request, { error: "Blockchain confirmation is not configured." }, 503);
     const db = adminClient();
     const { data: document, error: documentError } = await db.from("documents").select("*").eq("id", documentId).eq("owner_id", user.id).maybeSingle();
