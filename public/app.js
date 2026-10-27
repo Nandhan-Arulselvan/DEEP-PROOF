@@ -52,9 +52,10 @@ function renderLibrary() {
     const ids = document.createElement("div"); const hash = document.createElement("div"); hash.className = "hash-text"; hash.textContent = record.sha256_hash; const cid = document.createElement("div"); cid.className = "hash-text"; cid.textContent = `CID ${record.ipfs_cid}`; ids.append(hash, cid);
     const actions = document.createElement("div"); actions.className = "row-actions"; const badge = document.createElement("span"); badge.className = `chain-badge ${record.blockchain_status}`; badge.textContent = record.blockchain_status.replaceAll("_", " "); actions.append(badge, makeButton("Copy hash", () => copy(record.sha256_hash)), makeButton("Copy CID", () => copy(record.ipfs_cid)));
     if (state.config?.blockchain && record.blockchain_status !== "registered") {
-      actions.append(record.blockchain_status === "failed"
-        ? makeButton("Confirm prior transaction", () => confirmPriorTransaction(record))
-        : makeButton("Register on chain", () => registerOnChain(record)));
+      actions.append(
+        makeButton("Register on chain", () => registerOnChain(record)),
+        makeButton("Confirm prior transaction", () => confirmPriorTransaction(record)),
+      );
     }
     row.append(name, ids, actions); target.append(row);
   });
