@@ -51,7 +51,11 @@ function renderLibrary() {
     const name = document.createElement("div"); const title = document.createElement("div"); title.className = "filename"; title.textContent = record.original_filename; const meta = document.createElement("div"); meta.className = "filemeta"; meta.textContent = `${Number(record.file_size_bytes).toLocaleString()} bytes · ${when(record.created_at)}`; name.append(title, meta);
     const ids = document.createElement("div"); const hash = document.createElement("div"); hash.className = "hash-text"; hash.textContent = record.sha256_hash; const cid = document.createElement("div"); cid.className = "hash-text"; cid.textContent = `CID ${record.ipfs_cid}`; ids.append(hash, cid);
     const actions = document.createElement("div"); actions.className = "row-actions"; const badge = document.createElement("span"); badge.className = `chain-badge ${record.blockchain_status}`; badge.textContent = record.blockchain_status.replaceAll("_", " "); actions.append(badge, makeButton("Copy hash", () => copy(record.sha256_hash)), makeButton("Copy CID", () => copy(record.ipfs_cid)));
-    if (state.config?.blockchain && record.blockchain_status !== "registered") actions.append(makeButton("Register on chain", () => registerOnChain(record)));
+    if (state.config?.blockchain && record.blockchain_status !== "registered") {
+      actions.append(record.blockchain_status === "failed"
+        ? makeButton("Confirm prior transaction", () => confirmPriorTransaction(record))
+        : makeButton("Register on chain", () => registerOnChain(record)));
+    }
     row.append(name, ids, actions); target.append(row);
   });
 }
@@ -128,6 +132,18 @@ async function registerOnChain(document) {
     message("uploadResult", `Blockchain registration confirmed in block ${data.onChain.blockNumber}.`, "success");
     await loadLibrary();
   } catch (error) { message("uploadResult", getError(error), "error"); }
+}
+
+async function confirmPriorTransaction(document) {
+  const transactionHash = window.prompt("Paste the confirmed Sepolia transaction hash for this document.");
+  if (!transactionHash) return;
+  const target = $("uploadResult");
+  message("uploadResult", "Checking the existing Sepolia transaction. No new blockchain transaction will be sent.", "pending");
+  const { data, error } = await state.client.functions.invoke("confirm-blockchain-registration", { body: { documentId: document.id, transactionHash: transactionHash.trim() } });
+  if (error || data?.error) { message("uploadResult", data?.error || await getFunctionError(error), "error"); return; }
+  target.className = "result success";
+  target.textContent = `Existing blockchain registration confirmed in block ${data.onChain.blockNumber}.`;
+  await loadLibrary();
 }
 
 function showReport(data) {
